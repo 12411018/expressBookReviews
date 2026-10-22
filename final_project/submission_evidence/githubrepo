@@ -1,7 +1,9 @@
-﻿COMMAND: curl.exe -sS -L 'https://api.github.com/repos/12411018/expressBookReviews' -w '
+﻿COMMAND:
+curl.exe -sS -L https://api.github.com/repos/12411018/expressBookReviews -w '
 HTTP_STATUS:%{http_code}
 '
-RESPONSE:
+
+OUTPUT:
 {
   "id": 1430040743,
   "node_id": "R_kgDOVTywpw",
@@ -70,8 +72,8 @@ RESPONSE:
   "releases_url": "https://api.github.com/repos/12411018/expressBookReviews/releases{/id}",
   "deployments_url": "https://api.github.com/repos/12411018/expressBookReviews/deployments",
   "created_at": "2026-10-22T17:07:30Z",
-  "updated_at": "2026-10-22T17:08:26Z",
-  "pushed_at": "2026-10-22T17:08:19Z",
+  "updated_at": "2026-10-22T17:44:54Z",
+  "pushed_at": "2026-10-22T17:44:10Z",
   "git_url": "git://github.com/12411018/expressBookReviews.git",
   "ssh_url": "git@github.com:12411018/expressBookReviews.git",
   "clone_url": "https://github.com/12411018/expressBookReviews.git",
@@ -118,3 +120,12 @@ RESPONSE:
 }
 
 HTTP_STATUS:200
+
+
+NOTE: jq is unavailable in this PowerShell environment; the requested curl | jq command was not executed. This is the PowerShell metadata check actually executed instead.
+
+COMMAND:
+$repoMetadata = Invoke-RestMethod -Uri 'https://api.github.com/repos/12411018/expressBookReviews' -Headers @{ 'User-Agent' = 'Coursera-Express-Book-Review' }; $repoMetadata | Select-Object full_name, fork, @{Name='parent_full_name';Expression={$_.parent.full_name}}, default_branch | ConvertTo-Json -Compress
+
+OUTPUT:
+{"full_name":"12411018/expressBookReviews","fork":false,"parent_full_name":null,"default_branch":"main"}

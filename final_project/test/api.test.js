@@ -1,6 +1,15 @@
 const assert = require('node:assert/strict');
 const { after, before, test } = require('node:test');
+const { once } = require('node:events');
+const { createServer } = require('node:http');
 const app = require('../index.js');
+const {
+  getAllBooks,
+  getBookByISBN,
+  getBooksByAuthor,
+  getBooksByTitle,
+  getBookReview
+} = require('../router/general.js');
 
 let server;
 let baseUrl;
@@ -136,4 +145,54 @@ test('book search, registration, session authentication, and review lifecycle', 
 
   const reviewsAfterDelete = await fetch(`${baseUrl}/review/1`);
   assert.deepEqual(await reviewsAfterDelete.json(), {});
+});
+
+test('all five book retrieval functions use the configured Axios API', async () => {
+  const requests = [];
+  const responseBodies = {
+    '/books': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
+    '/isbn/1': { author: 'Remote Author', title: 'Remote Title', reviews: {} },
+    '/author?author=Remote+Author': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
+    '/title?title=Remote+Title': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
+    '/review/1': { reviewer: 'Remote review' }
+  };
+  const mockApi = createServer((req, res) => {
+    requests.push(`${req.url}`);
+    const body = responseBodies[req.url];
+    if (!body) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ message: 'Not found' }));
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(body));
+  });
+
+  mockApi.listen(0, '127.0.0.1');
+  await once(mockApi, 'listening');
+  const previousBaseUrl = process.env.BOOKS_API_BASE_URL;
+  process.env.BOOKS_API_BASE_URL = `http://127.0.0.1:${mockApi.address().port}`;
+
+  try {
+    assert.deepEqual(await getAllBooks(), responseBodies['/books']);
+    assert.deepEqual(await getBookByISBN('1'), responseBodies['/isbn/1']);
+    assert.deepEqual(await getBooksByAuthor('Remote Author'), responseBodies['/author?author=Remote+Author']);
+    assert.deepEqual(await getBooksByTitle('Remote Title'), responseBodies['/title?title=Remote+Title']);
+    assert.deepEqual(await getBookReview('1'), responseBodies['/review/1']);
+    assert.deepEqual(requests, [
+      '/books',
+      '/isbn/1',
+      '/author?author=Remote+Author',
+      '/title?title=Remote+Title',
+      '/review/1'
+    ]);
+  } finally {
+    if (previousBaseUrl === undefined) {
+      delete process.env.BOOKS_API_BASE_URL;
+    } else {
+      process.env.BOOKS_API_BASE_URL = previousBaseUrl;
+    }
+    await new Promise((resolve, reject) => {
+      mockApi.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
 });

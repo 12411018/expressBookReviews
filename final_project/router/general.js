@@ -6,33 +6,36 @@ const public_users = express.Router();
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-async function getRemoteBooks(path, params) {
-  const baseURL = process.env.BOOKS_API_BASE_URL;
-  if (!baseURL) {
-    return null;
-  }
-
-  const response = await axios.get(path, { baseURL, params, timeout: 5000 });
-  return response.data;
-}
-
 async function getAllBooks() {
-  const remoteBooks = await getRemoteBooks('/books');
-  return clone(remoteBooks || books);
+  if (process.env.BOOKS_API_BASE_URL) {
+    const response = await axios.get('/books', {
+      baseURL: process.env.BOOKS_API_BASE_URL,
+      timeout: 5000
+    });
+    return response.data;
+  }
+  return clone(books);
 }
 
 async function getBookByISBN(isbn) {
-  const remoteBook = await getRemoteBooks(`/isbn/${encodeURIComponent(isbn)}`);
-  if (remoteBook !== null) {
-    return remoteBook;
+  if (process.env.BOOKS_API_BASE_URL) {
+    const response = await axios.get(`/isbn/${encodeURIComponent(isbn)}`, {
+      baseURL: process.env.BOOKS_API_BASE_URL,
+      timeout: 5000
+    });
+    return response.data;
   }
   return books[isbn] ? clone(books[isbn]) : null;
 }
 
 async function getBooksByAuthor(author) {
-  const remoteBooks = await getRemoteBooks('/author', { author });
-  if (remoteBooks !== null) {
-    return remoteBooks;
+  if (process.env.BOOKS_API_BASE_URL) {
+    const response = await axios.get('/author', {
+      baseURL: process.env.BOOKS_API_BASE_URL,
+      params: { author },
+      timeout: 5000
+    });
+    return response.data;
   }
 
   const search = author.trim().toLocaleLowerCase();
@@ -44,9 +47,13 @@ async function getBooksByAuthor(author) {
 }
 
 async function getBooksByTitle(title) {
-  const remoteBooks = await getRemoteBooks('/title', { title });
-  if (remoteBooks !== null) {
-    return remoteBooks;
+  if (process.env.BOOKS_API_BASE_URL) {
+    const response = await axios.get('/title', {
+      baseURL: process.env.BOOKS_API_BASE_URL,
+      params: { title },
+      timeout: 5000
+    });
+    return response.data;
   }
 
   const search = title.trim().toLocaleLowerCase();
@@ -58,9 +65,12 @@ async function getBooksByTitle(title) {
 }
 
 async function getBookReview(isbn) {
-  const remoteReviews = await getRemoteBooks(`/review/${encodeURIComponent(isbn)}`);
-  if (remoteReviews !== null) {
-    return remoteReviews;
+  if (process.env.BOOKS_API_BASE_URL) {
+    const response = await axios.get(`/review/${encodeURIComponent(isbn)}`, {
+      baseURL: process.env.BOOKS_API_BASE_URL,
+      timeout: 5000
+    });
+    return response.data;
   }
   return books[isbn] ? clone(books[isbn].reviews) : null;
 }

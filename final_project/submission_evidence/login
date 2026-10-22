@@ -1,0 +1,8 @@
+﻿COMMAND:
+$loginBody | curl.exe -sS -c 'C:\Users\NIKHIL\AppData\Local\Temp\coursera-bookreview-a66cf5575f634a849b4b48cdd94e4560.cookies' -X POST http://localhost:5000/customer/login -H 'Content-Type: application/json' --data-binary @- -w '
+HTTP_STATUS:%{http_code}
+'
+
+OUTPUT:
+{"message":"Login successful.","username":"coursera175dc9874998"}
+HTTP_STATUS:200

@@ -1,0 +1,6 @@
+﻿COMMAND:
+$registerBody | curl.exe -sS -X POST http://localhost:5000/register -H "Content-Type: application/json" --data-binary @- -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"message":"User registered successfully."}
+HTTP_STATUS:201

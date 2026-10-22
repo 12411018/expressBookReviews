@@ -1,6 +1,0 @@
-﻿COMMAND: $reviewBody | curl.exe -sS -b 'C:\Users\NIKHIL\AppData\Local\Temp\coursera-review-14d5019dfb9248729600c3f3f8abc5bb.cookies' -X PUT 'http://localhost:5000/customer/auth/review/1' -H 'Content-Type: application/json' --data-binary '@-' -w '
-HTTP_STATUS:%{http_code}
-'
-RESPONSE:
-{"message":"Review added or updated successfully."}
-HTTP_STATUS:200
