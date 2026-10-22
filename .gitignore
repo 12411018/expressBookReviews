@@ -1,4 +1,8 @@
-# Distribution / packaging
-node_modules
-
+node_modules/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+coverage/
+customer-cookies.txt
 
