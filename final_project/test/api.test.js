@@ -1,7 +1,5 @@
 const assert = require('node:assert/strict');
 const { after, before, test } = require('node:test');
-const { once } = require('node:events');
-const { createServer } = require('node:http');
 const app = require('../index.js');
 const {
   getAllBooks,
@@ -147,52 +145,22 @@ test('book search, registration, session authentication, and review lifecycle', 
   assert.deepEqual(await reviewsAfterDelete.json(), {});
 });
 
-test('all five book retrieval functions use the configured Axios API', async () => {
-  const requests = [];
-  const responseBodies = {
-    '/books': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
-    '/isbn/1': { author: 'Remote Author', title: 'Remote Title', reviews: {} },
-    '/author?author=Remote+Author': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
-    '/title?title=Remote+Title': { '1': { author: 'Remote Author', title: 'Remote Title', reviews: {} } },
-    '/review/1': { reviewer: 'Remote review' }
-  };
-  const mockApi = createServer((req, res) => {
-    requests.push(`${req.url}`);
-    const body = responseBodies[req.url];
-    if (!body) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ message: 'Not found' }));
-    }
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(body));
-  });
-
-  mockApi.listen(0, '127.0.0.1');
-  await once(mockApi, 'listening');
+test('all five book retrieval functions use Axios against the API routes', async () => {
   const previousBaseUrl = process.env.BOOKS_API_BASE_URL;
-  process.env.BOOKS_API_BASE_URL = `http://127.0.0.1:${mockApi.address().port}`;
+  process.env.BOOKS_API_BASE_URL = baseUrl;
 
   try {
-    assert.deepEqual(await getAllBooks(), responseBodies['/books']);
-    assert.deepEqual(await getBookByISBN('1'), responseBodies['/isbn/1']);
-    assert.deepEqual(await getBooksByAuthor('Remote Author'), responseBodies['/author?author=Remote+Author']);
-    assert.deepEqual(await getBooksByTitle('Remote Title'), responseBodies['/title?title=Remote+Title']);
-    assert.deepEqual(await getBookReview('1'), responseBodies['/review/1']);
-    assert.deepEqual(requests, [
-      '/books',
-      '/isbn/1',
-      '/author?author=Remote+Author',
-      '/title?title=Remote+Title',
-      '/review/1'
-    ]);
+    const allBooks = await getAllBooks();
+    assert.equal(Object.keys(allBooks).length, 10);
+    assert.equal((await getBookByISBN('1')).title, 'Things Fall Apart');
+    assert.equal((await getBooksByAuthor('CHINUA ACHEBE'))['1'].author, 'Chinua Achebe');
+    assert.equal((await getBooksByTitle("Njál's Saga"))['7'].title, "Njál's Saga");
+    assert.deepEqual(await getBookReview('1'), {});
   } finally {
     if (previousBaseUrl === undefined) {
       delete process.env.BOOKS_API_BASE_URL;
     } else {
       process.env.BOOKS_API_BASE_URL = previousBaseUrl;
     }
-    await new Promise((resolve, reject) => {
-      mockApi.close((error) => (error ? reject(error) : resolve()));
-    });
   }
 });

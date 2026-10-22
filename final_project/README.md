@@ -19,7 +19,7 @@ final_project/
 
 The supplied dataset has identifiers `1` through `10`, not ISBN fields. Those identifiers are the values accepted by the starter's `/isbn/:isbn` and `/review/:isbn` routes. The book metadata and initial review objects are in `router/booksdb.json`; the initial review objects are empty. The API does not invent ISBNs or initial review text.
 
-The five async retrieval functions in `router/general.js` use Axios against the API specified by `BOOKS_API_BASE_URL` when that variable is set. With the setting unset, the Express endpoints read the supplied local JSON data directly, avoiding unnecessary requests back into the same server. Axios failures are allowed to reach the API's error handler instead of returning local data as a fake success.
+The five async retrieval functions in `router/general.js` use Axios against `BOOKS_API_BASE_URL`, which defaults to `http://localhost:5000`. The Express route handlers read the supplied local JSON data directly so they do not make recursive requests back into the same server. Axios failures are propagated to the caller instead of returning local data as a fake success. When the server uses a non-default port, set `BOOKS_API_BASE_URL` to that server's base URL before calling the retrieval functions.
 
 User registrations, sessions, and review changes are in memory and are lost when the server restarts. Passwords are salted and hashed with Node.js `scrypt`. Review changes require the login session cookie.
 

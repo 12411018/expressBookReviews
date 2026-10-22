@@ -5,39 +5,9 @@ const { registerUser, isValid } = require('./auth_users.js');
 const public_users = express.Router();
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const getApiBaseURL = () => process.env.BOOKS_API_BASE_URL || 'http://localhost:5000';
 
-async function getAllBooks() {
-  if (process.env.BOOKS_API_BASE_URL) {
-    const response = await axios.get('/books', {
-      baseURL: process.env.BOOKS_API_BASE_URL,
-      timeout: 5000
-    });
-    return response.data;
-  }
-  return clone(books);
-}
-
-async function getBookByISBN(isbn) {
-  if (process.env.BOOKS_API_BASE_URL) {
-    const response = await axios.get(`/isbn/${encodeURIComponent(isbn)}`, {
-      baseURL: process.env.BOOKS_API_BASE_URL,
-      timeout: 5000
-    });
-    return response.data;
-  }
-  return books[isbn] ? clone(books[isbn]) : null;
-}
-
-async function getBooksByAuthor(author) {
-  if (process.env.BOOKS_API_BASE_URL) {
-    const response = await axios.get('/author', {
-      baseURL: process.env.BOOKS_API_BASE_URL,
-      params: { author },
-      timeout: 5000
-    });
-    return response.data;
-  }
-
+function getLocalBooksByAuthor(author) {
   const search = author.trim().toLocaleLowerCase();
   return Object.fromEntries(
     Object.entries(books)
@@ -46,16 +16,7 @@ async function getBooksByAuthor(author) {
   );
 }
 
-async function getBooksByTitle(title) {
-  if (process.env.BOOKS_API_BASE_URL) {
-    const response = await axios.get('/title', {
-      baseURL: process.env.BOOKS_API_BASE_URL,
-      params: { title },
-      timeout: 5000
-    });
-    return response.data;
-  }
-
+function getLocalBooksByTitle(title) {
   const search = title.trim().toLocaleLowerCase();
   return Object.fromEntries(
     Object.entries(books)
@@ -64,15 +25,44 @@ async function getBooksByTitle(title) {
   );
 }
 
+async function getAllBooks() {
+  const response = await axios.get('/', {
+    baseURL: getApiBaseURL(),
+    timeout: 5000
+  });
+  return response.data;
+}
+
+async function getBookByISBN(isbn) {
+  const response = await axios.get(`/isbn/${encodeURIComponent(isbn)}`, {
+    baseURL: getApiBaseURL(),
+    timeout: 5000
+  });
+  return response.data;
+}
+
+async function getBooksByAuthor(author) {
+  const response = await axios.get(`/author/${encodeURIComponent(author)}`, {
+    baseURL: getApiBaseURL(),
+    timeout: 5000
+  });
+  return response.data;
+}
+
+async function getBooksByTitle(title) {
+  const response = await axios.get(`/title/${encodeURIComponent(title)}`, {
+    baseURL: getApiBaseURL(),
+    timeout: 5000
+  });
+  return response.data;
+}
+
 async function getBookReview(isbn) {
-  if (process.env.BOOKS_API_BASE_URL) {
-    const response = await axios.get(`/review/${encodeURIComponent(isbn)}`, {
-      baseURL: process.env.BOOKS_API_BASE_URL,
-      timeout: 5000
-    });
-    return response.data;
-  }
-  return books[isbn] ? clone(books[isbn].reviews) : null;
+  const response = await axios.get(`/review/${encodeURIComponent(isbn)}`, {
+    baseURL: getApiBaseURL(),
+    timeout: 5000
+  });
+  return response.data;
 }
 
 public_users.post('/register', async (req, res, next) => {
@@ -96,7 +86,7 @@ public_users.post('/register', async (req, res, next) => {
 
 public_users.get('/', async (req, res, next) => {
   try {
-    return res.json(await getAllBooks());
+    return res.json(clone(books));
   } catch (error) {
     next(error);
   }
@@ -104,7 +94,7 @@ public_users.get('/', async (req, res, next) => {
 
 public_users.get('/isbn/:isbn', async (req, res, next) => {
   try {
-    const book = await getBookByISBN(req.params.isbn);
+    const book = books[req.params.isbn] ? clone(books[req.params.isbn]) : null;
     if (!book) {
       return res.status(404).json({ message: 'Book not found.' });
     }
@@ -116,7 +106,7 @@ public_users.get('/isbn/:isbn', async (req, res, next) => {
 
 public_users.get('/author/:author', async (req, res, next) => {
   try {
-    return res.json(await getBooksByAuthor(req.params.author));
+    return res.json(getLocalBooksByAuthor(req.params.author));
   } catch (error) {
     next(error);
   }
@@ -124,7 +114,7 @@ public_users.get('/author/:author', async (req, res, next) => {
 
 public_users.get('/title/:title', async (req, res, next) => {
   try {
-    return res.json(await getBooksByTitle(req.params.title));
+    return res.json(getLocalBooksByTitle(req.params.title));
   } catch (error) {
     next(error);
   }
@@ -132,11 +122,11 @@ public_users.get('/title/:title', async (req, res, next) => {
 
 public_users.get('/review/:isbn', async (req, res, next) => {
   try {
-    const reviews = await getBookReview(req.params.isbn);
-    if (reviews === null) {
+    const book = books[req.params.isbn];
+    if (!book) {
       return res.status(404).json({ message: 'Book not found.' });
     }
-    return res.json(reviews);
+    return res.json(clone(book.reviews));
   } catch (error) {
     next(error);
   }
