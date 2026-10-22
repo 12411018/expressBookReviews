@@ -14,6 +14,8 @@ final_project/
 |   `-- general.js
 `-- test/
     `-- api.test.js
+
+The ten generated assignment evidence files are in the repository-root `submission_evidence/` directory. The GitHub metadata evidence records the repository's actual fork status; this repository currently is not marked as a fork.
 ```
 
 `router/booksdb.json` is the source of book metadata and initial reviews. Review changes, registered users, and login sessions are held in memory and disappear when the process restarts. This project does not provide durable storage, transactions, or cross-process synchronization.
@@ -62,35 +64,43 @@ First create a helper in the same PowerShell terminal. It runs cURL, prints the 
 function Save-CurlEvidence {
   param(
     [Parameter(Mandatory = $true)][string]$File,
-    [Parameter(Mandatory = $true)][string[]]$CurlArgs
+    [Parameter(Mandatory = $true)][string[]]$CurlArgs,
+    [string]$Body,
+    [string]$Command
   )
-  $command = 'curl.exe ' + ($CurlArgs -join ' ')
-  $response = & curl.exe @CurlArgs
-  if ($LASTEXITCODE -ne 0) { throw "cURL failed: $command" }
-  @("COMMAND: $command", 'RESPONSE:') + $response |
+  if (-not $Command) { $Command = 'curl.exe ' + ($CurlArgs -join ' ') }
+  $captureArgs = $CurlArgs + @('-w', "`nHTTP_STATUS:%{http_code}`n")
+  if ($PSBoundParameters.ContainsKey('Body')) {
+    $response = $Body | & curl.exe @captureArgs
+  } else {
+    $response = & curl.exe @captureArgs
+  }
+  if ($LASTEXITCODE -ne 0) { throw "cURL failed: $Command" }
+  @("COMMAND: $Command", 'RESPONSE:') + $response |
     Set-Content -Encoding utf8 -Path $File
   $response
 }
+$evidenceDirectory = '..\submission_evidence'
 ```
 
 ### GitHub fork information
 
-Fork `https://github.com/ibm-developer-skills-network/expressBookReviews` into your own GitHub account first. Replace `YOUR_GITHUB_USERNAME` below with your real username. A fork's repository API response has a `parent` entry naming the upstream repository.
+The repository used for this project is `12411018/expressBookReviews`. Its GitHub API metadata reports `"fork": false` and does not include parent-repository metadata, so it is **not verified as a fork** of the IBM starter. The assignment's original URL, `https://github.com/ibm-developer-skills-network/expressBookReview` (singular), returned HTTP 404 during verification. The saved evidence contains the actual response for the user's repository; do not represent it as a fork.
 
 ```powershell
-Save-CurlEvidence -File githubrepo -CurlArgs @('-sS', '-L', 'https://api.github.com/repos/YOUR_GITHUB_USERNAME/expressBookReviews')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'githubrepo') -CurlArgs @('-sS', '-L', 'https://api.github.com/repos/12411018/expressBookReviews')
 ```
 
-Expected response shape: a GitHub repository JSON object with `"full_name"` set to your fork and `"parent":{"full_name":"ibm-developer-skills-network/expressBookReviews", ...}`. The actual account name and response depend on your fork.
+The API response includes the repository's `full_name`, `fork`, and `parent` fields.
 
 ### Public book routes
 
 ```powershell
-Save-CurlEvidence -File getallbooks -CurlArgs @('-sS', 'http://localhost:5000/')
-Save-CurlEvidence -File getbooksbyISBN -CurlArgs @('-sS', 'http://localhost:5000/isbn/1')
-Save-CurlEvidence -File getbooksbyauthor -CurlArgs @('-sS', 'http://localhost:5000/author/Chinua%20Achebe')
-Save-CurlEvidence -File getbooksbytitle -CurlArgs @('-sS', 'http://localhost:5000/title/Things%20Fall%20Apart')
-Save-CurlEvidence -File getbookreview -CurlArgs @('-sS', 'http://localhost:5000/review/1')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'getallbooks') -CurlArgs @('-sS', 'http://localhost:5000/')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'getbooksbyISBN') -CurlArgs @('-sS', 'http://localhost:5000/isbn/1')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'getbooksbyauthor') -CurlArgs @('-sS', 'http://localhost:5000/author/Chinua%20Achebe')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'getbooksbytitle') -CurlArgs @('-sS', 'http://localhost:5000/title/Things%20Fall%20Apart')
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'getbookreview') -CurlArgs @('-sS', 'http://localhost:5000/review/1')
 ```
 
 Expected data: `/` returns a JSON object keyed by IDs, including `"1":{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}`; `/isbn/1` returns that single book; the author and title searches return a keyed object containing that book; initial `/review/1` returns `{}`.
@@ -100,15 +110,31 @@ Expected data: `/` returns a JSON object keyed by IDs, including `"1":{"author":
 Use a unique username if you have already registered one since the server last started. The cookie jar created during login is used by the authenticated review requests.
 
 ```powershell
-Save-CurlEvidence -File register -CurlArgs @('-sS', '-X', 'POST', 'http://localhost:5000/register', '-H', 'Content-Type: application/json', '-d', '{"username":"bookreader1","password":"BookReview123!"}')
-Save-CurlEvidence -File login -CurlArgs @('-sS', '-c', 'customer-cookies.txt', '-X', 'POST', 'http://localhost:5000/customer/login', '-H', 'Content-Type: application/json', '-d', '{"username":"bookreader1","password":"BookReview123!"}')
-Save-CurlEvidence -File reviewadded -CurlArgs @('-sS', '-b', 'customer-cookies.txt', '-X', 'PUT', 'http://localhost:5000/customer/auth/review/1', '-H', 'Content-Type: application/json', '-d', '{"review":"A thoughtful and memorable novel."}')
-Save-CurlEvidence -File deletereview -CurlArgs @('-sS', '-b', 'customer-cookies.txt', '-X', 'DELETE', 'http://localhost:5000/customer/auth/review/1')
+$evidenceUsername = 'coursera-reader'
+$evidencePassword = Read-Host 'Enter a unique test password (8+ characters)' -AsSecureString
+$evidencePasswordPlain = [System.Net.NetworkCredential]::new('', $evidencePassword).Password
+$registerBody = @{ username = $evidenceUsername; password = $evidencePasswordPlain } | ConvertTo-Json -Compress
+$registerCommand = "`$registerBody | curl.exe -sS -X POST 'http://localhost:5000/register' -H 'Content-Type: application/json' --data-binary '@-' -w '`nHTTP_STATUS:%{http_code}`n'"
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'register') -CurlArgs @('-sS', '-X', 'POST', 'http://localhost:5000/register', '-H', 'Content-Type: application/json', '--data-binary', '@-') -Body $registerBody -Command $registerCommand
+$loginBody = @{ username = $evidenceUsername; password = $evidencePasswordPlain } | ConvertTo-Json -Compress
+$cookieJar = Join-Path $env:TEMP 'customer-cookies.txt'
+$loginCommand = "`$loginBody | curl.exe -sS -c '$cookieJar' -X POST 'http://localhost:5000/customer/login' -H 'Content-Type: application/json' --data-binary '@-' -w '`nHTTP_STATUS:%{http_code}`n'"
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'login') -CurlArgs @('-sS', '-c', $cookieJar, '-X', 'POST', 'http://localhost:5000/customer/login', '-H', 'Content-Type: application/json', '--data-binary', '@-') -Body $loginBody -Command $loginCommand
+$reviewBody = @{ review = 'A thoughtful and memorable novel.' } | ConvertTo-Json -Compress
+$reviewCommand = "`$reviewBody | curl.exe -sS -b '$cookieJar' -X PUT 'http://localhost:5000/customer/auth/review/1' -H 'Content-Type: application/json' --data-binary '@-' -w '`nHTTP_STATUS:%{http_code}`n'"
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'reviewadded') -CurlArgs @('-sS', '-b', $cookieJar, '-X', 'PUT', 'http://localhost:5000/customer/auth/review/1', '-H', 'Content-Type: application/json', '--data-binary', '@-') -Body $reviewBody -Command $reviewCommand
+$deleteCommand = "curl.exe -sS -b '$cookieJar' -X DELETE 'http://localhost:5000/customer/auth/review/1' -w '`nHTTP_STATUS:%{http_code}`n'"
+Save-CurlEvidence -File (Join-Path $evidenceDirectory 'deletereview') -CurlArgs @('-sS', '-b', $cookieJar, '-X', 'DELETE', 'http://localhost:5000/customer/auth/review/1') -Command $deleteCommand
+Remove-Item $cookieJar -Force -ErrorAction SilentlyContinue
+$evidencePasswordPlain = $null
+$registerBody = $null
+$loginBody = $null
+$reviewBody = $null
 ```
 
-Expected successful response shapes are `{"message":"User registered successfully."}`, `{"message":"Login successful.","username":"bookreader1"}`, `{"message":"Review added or updated successfully."}`, and `{"message":"Review deleted successfully."}`. The responses are generated by the running application. Do not include passwords in evidence or screenshots.
+Expected successful response shapes are `{"message":"User registered successfully."}`, `{"message":"Login successful.","username":"..."}`, `{"message":"Review added or updated successfully."}`, and `{"message":"Review deleted successfully."}`. The responses are generated by the running application. Do not include passwords in evidence or screenshots.
 
-Required evidence filenames (without extensions):
+Required evidence filenames (without extensions) in `submission_evidence/`:
 
 ```text
 githubrepo
@@ -125,31 +151,18 @@ deletereview
 
 The login command also creates `customer-cookies.txt`; it contains an authentication cookie and should not be submitted publicly.
 
-## Fork, clone, commit, and push
+## GitHub repository and submission
 
-1. On GitHub, open the upstream repository and choose **Fork**.
-2. Clone your fork (replace the placeholder):
+The configured `origin` is `https://github.com/12411018/expressBookReviews.git`, and the checked-out branch is `main`. The evidence and this README can be pushed from the repository root:
 
-   ```powershell
-   git clone https://github.com/YOUR_GITHUB_USERNAME/expressBookReviews.git
-   cd .\expressBookReviews\final_project
-   ```
+```powershell
+git remote -v
+git add final_project/README.md submission_evidence/
+git diff --cached --check
+git commit -m "Add Coursera submission evidence"
+git push origin main
+```
 
-3. Open the cloned repository in VS Code with `code ..`.
-4. Install dependencies and run tests/server using the commands above.
-5. From the repository root, check and set the fork as `origin` if needed:
+The current branch and tracked path resolve to `https://github.com/12411018/expressBookReviews/blob/main/final_project/router/general.js`.
 
-   ```powershell
-   cd ..
-   git remote -v
-   git remote set-url origin https://github.com/YOUR_GITHUB_USERNAME/expressBookReviews.git
-   git add final_project .gitignore
-   git commit -m "Complete Express book review API"
-   git push -u origin main
-   ```
-
-   If your fork's default branch is not `main`, use the branch shown by `git branch --show-current`.
-
-6. The direct `general.js` URL is `https://github.com/YOUR_GITHUB_USERNAME/expressBookReviews/blob/main/final_project/router/general.js` (replace the username and branch with your actual values). You can obtain the exact URL by opening that file in your fork and copying its browser address.
-
-Do not claim the project is forked, pushed, or tested on GitHub until you have completed those steps.
+**Fork requirement:** GitHub currently reports `fork: false` for this repository. The assignment's stated upstream URL returned 404 when checked. Verify the intended upstream repository with Coursera before submission; this repository cannot be described as an IBM fork based on its current metadata.
