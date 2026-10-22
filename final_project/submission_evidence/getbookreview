@@ -1,10 +1,7 @@
 ﻿COMMAND:
-curl.exe -sS http://localhost:5000/review/1 -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {}
 HTTP_STATUS:200
-
-NOTE: The supplied initial reviews for dataset key 1 are empty: {}.
+NOTE: Initial reviews for supplied dataset record 1 are empty: {}.

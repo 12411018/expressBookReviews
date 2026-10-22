@@ -1,10 +1,7 @@
 ﻿COMMAND:
-curl.exe -sS http://localhost:5000/isbn/1 -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS http://localhost:5000/isbn/1 -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}
 HTTP_STATUS:200
-
-NOTE: The supplied database has identifiers 1-10 and no ISBN fields; 1 is the actual starter dataset key accepted by the /isbn/:isbn route.
+NOTE: The supplied booksdb.json has no ISBN fields; it uses numeric IDs 1-10, which the starter /isbn/:isbn endpoint accepts. This request uses ID 1, not a real ISBN.

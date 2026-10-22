@@ -1,7 +1,5 @@
 ﻿COMMAND:
-curl.exe -sS "http://localhost:5000/title/Things%20Fall%20Apart" -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS "http://localhost:5000/title/Things%20Fall%20Apart" -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {"1":{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}}

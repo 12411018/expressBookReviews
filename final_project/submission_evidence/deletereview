@@ -1,16 +1,12 @@
 ﻿COMMAND:
-curl.exe -sS -b 'C:\Users\NIKHIL\AppData\Local\Temp\coursera-bookreview-a66cf5575f634a849b4b48cdd94e4560.cookies' -X DELETE http://localhost:5000/customer/auth/review/1 -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS -b $cookieJar -X DELETE http://localhost:5000/customer/auth/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {"message":"Review deleted successfully."}
 HTTP_STATUS:200
 
 COMMAND:
-curl.exe -sS http://localhost:5000/review/1 -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {}

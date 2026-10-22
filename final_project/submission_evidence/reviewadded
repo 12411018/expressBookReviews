@@ -1,17 +1,13 @@
 ﻿COMMAND:
-$reviewBody | curl.exe -sS -b 'C:\Users\NIKHIL\AppData\Local\Temp\coursera-bookreview-a66cf5575f634a849b4b48cdd94e4560.cookies' -X PUT http://localhost:5000/customer/auth/review/1 -H 'Content-Type: application/json' --data-binary @- -w '
-HTTP_STATUS:%{http_code}
-'
+$reviewBody | curl.exe -sS -b $cookieJar -X PUT http://localhost:5000/customer/auth/review/1 -H "Content-Type: application/json" --data-binary @- -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
 {"message":"Review added or updated successfully."}
 HTTP_STATUS:200
 
 COMMAND:
-curl.exe -sS http://localhost:5000/review/1 -w '
-HTTP_STATUS:%{http_code}
-'
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
 
 OUTPUT:
-{"coursera175dc9874998":"Coursera grader verification review."}
+{"courseraac6051321714":"Coursera resubmission check."}
 HTTP_STATUS:200

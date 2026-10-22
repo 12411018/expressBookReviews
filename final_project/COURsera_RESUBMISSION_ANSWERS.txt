@@ -1,0 +1,156 @@
+﻿COURsera Express Book Reviews — Resubmission Answers
+
+Copy each question section into its matching Coursera answer field. Q1-Q10 below include actual commands and outputs captured from this project. Never claim the fork or real-ISBN criteria are met; see the warnings in Q1 and Q3.
+
+==================== Q1: GitHub repository parent verification ====================
+
+QUESTION 1
+COMMAND:
+curl -sS -L https://api.github.com/repos/12411018/expressBookReviews | jq '.parent.full_name'
+OUTPUT:
+null
+
+The command above was run in Git Bash with jq 1.8.2 available on PATH.
+COMMAND:
+curl -sS -L https://api.github.com/repos/12411018/expressBookReviews | jq '{full_name, fork, parent: .parent.full_name}'
+OUTPUT:
+{
+  "full_name": "12411018/expressBookReviews",
+  "fork": false,
+  "parent": null
+}
+
+HTTP status was not requested by the rubric pipeline; both commands completed successfully.
+
+WARNING: The jq command output is null. Live repository metadata says fork=false and parent=null, so the current repository is not a fork of ibm-developer-skills-network/expressBookReviews. This question cannot be satisfied by this repository as it stands.
+
+==================== Q2: Retrieve all books ====================
+
+COMMAND:
+curl.exe -sS http://localhost:5000/ -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"1":{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}},"2":{"author":"Hans Christian Andersen","title":"Fairy tales","reviews":{}},"3":{"author":"Dante Alighieri","title":"The Divine Comedy","reviews":{}},"4":{"author":"Unknown","title":"The Epic Of Gilgamesh","reviews":{}},"5":{"author":"Unknown","title":"The Book Of Job","reviews":{}},"6":{"author":"Unknown","title":"One Thousand and One Nights","reviews":{}},"7":{"author":"Unknown","title":"Njál's Saga","reviews":{}},"8":{"author":"Jane Austen","title":"Pride and Prejudice","reviews":{}},"9":{"author":"Honoré de Balzac","title":"Le Père Goriot","reviews":{}},"10":{"author":"Samuel Beckett","title":"Molloy, Malone Dies, The Unnamable, the trilogy","reviews":{}}}
+HTTP_STATUS:200
+
+The complete live response below contains ten supplied records, with authors, titles, and review objects.
+
+==================== Q3: Retrieve book by ISBN ====================
+
+COMMAND:
+curl.exe -sS http://localhost:5000/isbn/1 -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}
+HTTP_STATUS:200
+NOTE: The supplied booksdb.json has no ISBN fields; it uses numeric IDs 1-10, which the starter /isbn/:isbn endpoint accepts. This request uses ID 1, not a real ISBN.
+
+WARNING: The supplied booksdb.json contains numeric keys 1-10 and no ISBN properties. The actual request below succeeds for starter key 1 but it is not a real ISBN lookup. A real ISBN value cannot be truthfully submitted from this dataset.
+
+==================== Q4: Retrieve books by author ====================
+
+COMMAND:
+curl.exe -sS "http://localhost:5000/author/Chinua%20Achebe" -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"1":{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}}
+HTTP_STATUS:200
+
+The command searches for an existing author from the supplied data.
+
+==================== Q5: Retrieve books by title ====================
+
+COMMAND:
+curl.exe -sS "http://localhost:5000/title/Things%20Fall%20Apart" -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"1":{"author":"Chinua Achebe","title":"Things Fall Apart","reviews":{}}}
+HTTP_STATUS:200
+
+The command searches for an existing title from the supplied data.
+
+==================== Q6: Retrieve initial book reviews ====================
+
+COMMAND:
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{}
+HTTP_STATUS:200
+NOTE: Initial reviews for supplied dataset record 1 are empty: {}.
+
+WARNING: The supplied initial reviews for this record are empty; the actual successful response is {}. No initial review text is present in the dataset.
+
+==================== Q7: Register a test user ====================
+
+COMMAND:
+$registerBody | curl.exe -sS -X POST http://localhost:5000/register -H "Content-Type: application/json" --data-binary @- -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"message":"User registered successfully."}
+HTTP_STATUS:201
+
+The actual success response is shown. The password was held in memory and is intentionally omitted from this public evidence.
+
+==================== Q8: Log in as the registered user ====================
+
+COMMAND:
+$loginBody | curl.exe -sS -c $cookieJar -X POST http://localhost:5000/customer/login -H "Content-Type: application/json" --data-binary @- -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"message":"Login successful.","username":"courseraac6051321714"}
+HTTP_STATUS:200
+
+The actual success response is shown. The session cookie jar was stored outside the project and has been deleted; no cookie contents or password are included.
+
+==================== Q9: Add a review ====================
+
+COMMAND:
+$reviewBody | curl.exe -sS -b $cookieJar -X PUT http://localhost:5000/customer/auth/review/1 -H "Content-Type: application/json" --data-binary @- -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"message":"Review added or updated successfully."}
+HTTP_STATUS:200
+
+COMMAND:
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"courseraac6051321714":"Coursera resubmission check."}
+HTTP_STATUS:200
+
+The successful PUT response and a follow-up GET showing the added review are included. The authenticated cookie contents are not included.
+
+==================== Q10: Delete a review ====================
+
+COMMAND:
+curl.exe -sS -b $cookieJar -X DELETE http://localhost:5000/customer/auth/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{"message":"Review deleted successfully."}
+HTTP_STATUS:200
+
+COMMAND:
+curl.exe -sS http://localhost:5000/review/1 -w "`nHTTP_STATUS:%{http_code}`n"
+
+OUTPUT:
+{}
+HTTP_STATUS:200
+
+The successful DELETE response and a follow-up GET confirming the empty review object are included.
+
+==================== Q11: Axios retrieval source URL ====================
+
+Public URL: https://github.com/12411018/expressBookReviews/blob/main/final_project/router/general.js
+
+The file exports getAllBooks, getBookByISBN, getBooksByAuthor, getBooksByTitle, and getBookReview. Each is async and performs an Axios GET against the configured BOOKS_API_BASE_URL when supplied; otherwise the Express server reads the bundled JSON directly to avoid self-HTTP requests. Tests exercise the Axios path for all five functions. The file is publicly accessible on the current main branch.
+
+Q11 score limitation: The full Coursera point-by-point rubric was not available in this repository or in the supplied feedback. The verified source meets the stated five-function/Axios/async requirement, but the exact reason for the earlier 2/8 score cannot be established from available evidence. Ask the course staff for rubric details before attributing that score to a specific missing requirement.
+
+==================== Remaining submission warnings ====================
+
+Q1: Current repository is not a GitHub fork (fork=false, parent=null). Do not change, rename, or delete the existing repository without authorization. The safest route is to ask course staff whether this existing repo is acceptable or use another GitHub account/organization for a genuine fork of the correct IBM upstream. The existing account already owns this repository name, so a same-owner fork may require renaming the existing repository first; do not do that without explicit approval.
+
+Q3: No real ISBN exists in the supplied dataset. Obtain the correct ISBN-bearing dataset or instructor guidance; do not label numeric key 1 as a real ISBN.
+
+The IBM plural-name repository ibm-developer-skills-network/expressBookReviews exists, but GitHub metadata reports it as fork=false with no parent. The singular URL ibm-developer-skills-network/expressBookReview returns 404.
