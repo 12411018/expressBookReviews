@@ -1,0 +1,14 @@
+=== PUT Add Review ===
+COMMAND: PUT http://127.0.0.1:61421/customer/auth/review/1
+HTTP_STATUS: 200
+RESPONSE BODY:
+{
+  "message": "Review added or updated successfully."
+}
+
+--- Verification: GET /review/1 after PUT ---
+HTTP_STATUS: 200
+RESPONSE BODY:
+{
+  "courseraevidence": "A powerful and moving account of cultural collision — essential reading."
+}

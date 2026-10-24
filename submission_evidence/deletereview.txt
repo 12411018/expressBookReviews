@@ -1,0 +1,12 @@
+=== DELETE Review ===
+COMMAND: DELETE http://127.0.0.1:61421/customer/auth/review/1
+HTTP_STATUS: 200
+RESPONSE BODY:
+{
+  "message": "Review deleted successfully."
+}
+
+--- Verification: GET /review/1 after DELETE ---
+HTTP_STATUS: 200
+RESPONSE BODY:
+{}

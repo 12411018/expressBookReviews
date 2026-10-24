@@ -1,0 +1,16 @@
+=== GitHub Repository ===
+
+Repository URL:
+  https://github.com/12411018/expressBookReviews
+
+general.js public URL:
+  https://github.com/12411018/expressBookReviews/blob/main/final_project/router/general.js
+
+GitHub API metadata (as of audit 2026-10-24):
+  full_name : 12411018/expressBookReviews
+  fork      : false
+  parent    : null
+
+WARNING: This repository was NOT forked from ibm-developer-skills-network/expressBookReviews.
+It contains identical working code but GitHub records fork=false.
+See course staff for guidance on re-forking if required.

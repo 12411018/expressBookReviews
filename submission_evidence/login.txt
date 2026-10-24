@@ -1,0 +1,9 @@
+=== POST Login ===
+COMMAND: POST http://127.0.0.1:61421/customer/login
+HTTP_STATUS: 200
+RESPONSE BODY:
+{
+  "message": "Login successful.",
+  "username": "courseraevidence"
+}
+[Session cookie set in Set-Cookie response header. Value not recorded for security.]
