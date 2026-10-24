@@ -1,5 +1,5 @@
 === POST Register ===
-COMMAND: POST http://127.0.0.1:61421/register
+COMMAND: POST http://127.0.0.1:51832/register
 HTTP_STATUS: 201
 RESPONSE BODY:
 {
