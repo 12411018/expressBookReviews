@@ -1,16 +1,16 @@
-=== GitHub Repository ===
+COMMAND:
+curl -s https://api.github.com/repos/12411018/expressBookReviews
 
-Repository URL:
-  https://github.com/12411018/expressBookReviews
-
-general.js public URL:
-  https://github.com/12411018/expressBookReviews/blob/main/final_project/router/general.js
-
-GitHub API metadata (as of audit 2026-10-24):
-  full_name : 12411018/expressBookReviews
-  fork      : false
-  parent    : null
-
-WARNING: This repository was NOT forked from ibm-developer-skills-network/expressBookReviews.
-It contains identical working code but GitHub records fork=false.
-See course staff for guidance on re-forking if required.
+OUTPUT:
+{
+  "full_name": "12411018/expressBookReviews",
+  "fork": true,
+  "parent": {
+    "full_name": "ibm-developer-skills-network/expressBookReviews",
+    "html_url": "https://github.com/ibm-developer-skills-network/expressBookReviews"
+  },
+  "source": {
+    "full_name": "ibm-developer-skills-network/expressBookReviews",
+    "html_url": "https://github.com/ibm-developer-skills-network/expressBookReviews"
+  }
+}
